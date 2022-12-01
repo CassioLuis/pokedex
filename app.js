@@ -1,31 +1,31 @@
-const fetchPokemon = () => {
-  const getPokemonUrl = (id) => `https://pokeapi.co/api/v2/pokemon/${id}`;
+const getPokemonUrl = (id) => `https://pokeapi.co/api/v2/pokemon/${id}`;
 
-  const pokemonPromises = [];
-
-  for (let i = 1; i <= 150; i++) {
-    pokemonPromises.push(
-      fetch(getPokemonUrl(i)).then((response) => response.json())
+const generatePokemonPromises = () =>
+  Array(150)
+    .fill()
+    .map((_, index) =>
+      fetch(getPokemonUrl(index + 1)).then((response) => response.json())
     );
-  }
 
-  Promise.all(pokemonPromises).then((pokemons) => {
-    console.log(pokemons);
+const generateHTML = (pokemons) =>
+  pokemons.reduce((acc, { name, id, types, sprites }) => {
+    const elementTypes = types.map((typeInfo) => typeInfo.type.name);
 
-    const lisPokemons = pokemons.reduce((acc, pokemon) => {
-      acc += `
-          <li class = "card">
-            <h2 class = "card=tittle">${pokemon.id}. ${pokemon.name}</h2>
-            <p class = "card-subtitle">${pokemon.types
-              .map((typeInfo) => typeInfo.type.name)
-              .join(" | ")}</p>
-          </li>
-        `;
-      return acc;
-    }, "");
+    acc += `
+    <li class = "card ${elementTypes[0]}">
+    <img class="card-image" alt="${name}" src="${sprites.front_shiny}">
+      <h2 class = "card=tittle">${id}. ${name}</h2>
+      <p class = "card-subtitle">${elementTypes.join(" | ")}</p>
+    </li>
+  `;
 
-    // console.log(lisPokemons);
-  });
+    return acc;
+  }, "");
+
+const insertPokemonsIntoPage = (pokemons) => {
+  const ul = document.querySelector('[data-js="pokedex"]');
+  ul.innerHTML = pokemons;
 };
 
-fetchPokemon();
+const pokemonPromises = generatePokemonPromises();
+Promise.all(pokemonPromises).then(generateHTML).then(insertPokemonsIntoPage);
